@@ -1,0 +1,16 @@
+{
+  "name": "fan-control",
+  "version": "0.0.1",
+  "description": "Fan control program",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^10.0.0",
+    "prompts": "^2.4.1",
+    "websocket": "^1.0.34"
+  }
+}
