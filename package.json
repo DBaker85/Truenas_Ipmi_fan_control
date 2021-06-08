@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky install",
-    "setup": "ts-node scripts/create-config.ts"
+    "setup": "ts-node scripts/create-config.ts",
+    "start": "ts-node index.ts"
   },
   "author": "",
   "license": "ISC",

@@ -1,13 +1,23 @@
-const { exec } = require("child_process");
-const { readJSON } = require("fs-extra");
-const { resolve } = require("path");
+import { exec } from "child_process";
+import { readJSON } from "fs-extra";
+import { resolve } from "path";
+
+type SecretsType = {
+  IpmiIp: String;
+  IpmiUser: String;
+  IpmiPassword: String;
+  nasIp: String;
+  nasApiKey: String;
+};
 
 (async () => {
   try {
-    const { ip, user, password } = await readJSON(resolve("secrets.json"));
+    const { IpmiIp, IpmiUser, IpmiPassword } = (await readJSON(
+      resolve("secrets.json")
+    )) as SecretsType;
 
     exec(
-      `ipmitool -I lanplus -H ${ip} -U ${user} -P ${password} sensor list`,
+      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} sensor list`,
       (error, stdout, stderr) => {
         if (error) {
           console.log(`error: ${error.message}`);
@@ -21,19 +31,8 @@ const { resolve } = require("path");
       }
     );
   } catch (err) {
-    exec(
-      `ipmitool -I lanplus -H ${ip} -U ${user} -P ${password} sensor list`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.log(`error: ${error.message}`);
-          return;
-        }
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          return;
-        }
-        console.log(`stdout with no cinfig: ${stdout}`);
-      }
+    console.error(
+      `no config file found, try running npm run setup to get started`
     );
   }
   /**
