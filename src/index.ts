@@ -1,8 +1,16 @@
 import { spawnSync } from "child_process";
 import { readJSON } from "fs-extra";
 import { resolve } from "path";
+import fetch, { Response } from "node-fetch";
+
+import { timer, from, of } from "rxjs";
+import { map, filter, concatMap } from "rxjs/operators";
+
+import { getUnixTime, subSeconds } from "date-fns";
 
 import { manualMode, fanSpeed15, fan5Off } from "./ipmiCommands";
+
+import { getHighestTemp } from "./utils";
 
 type SecretsType = {
   IpmiIp: String;
@@ -14,9 +22,8 @@ type SecretsType = {
 
 (async () => {
   try {
-    const { IpmiIp, IpmiUser, IpmiPassword } = (await readJSON(
-      resolve("secrets.json")
-    )) as SecretsType;
+    const { IpmiIp, IpmiUser, IpmiPassword, nasIp, nasApiKey } =
+      (await readJSON(resolve("secrets.json"))) as SecretsType;
 
     spawnSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
@@ -29,25 +36,38 @@ type SecretsType = {
     spawnSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
     );
+
+    timer(1, 1000)
+      .pipe(
+        concatMap(async (id) => {
+          const res = await fetch(
+            `http://${nasIp}/api/v2.0/reporting/get_data`,
+            {
+              method: "POST", // *GET, POST, PUT, DELETE, etc.
+              headers: {
+                Authorization: `Bearer ${nasApiKey}`,
+              },
+              body: JSON.stringify({
+                graphs: [
+                  {
+                    name: "cputemp",
+                  },
+                ],
+                reporting_query: {
+                  start: `${getUnixTime(subSeconds(new Date(), 10))}`,
+                  end: `${getUnixTime(subSeconds(new Date(), 10))}`,
+                  aggregate: true,
+                },
+              }),
+            }
+          );
+          const json = await res.json();
+          // do stuff
+          return getHighestTemp(json);
+        })
+      )
+      .subscribe((resp: number) => console.log(resp));
   } catch (err) {
-    console.error(
-      `no config file found, try running npm run setup to get started`
-    );
+    console.error(err);
   }
-  /**
- *  Manual mode
-
-    ipmitool -I lanplus -H [ip] -U [user] -P [password] raw 0x30 0x30 0x01 0x00
-
-    auto mode 
-
-    ipmitool -I lanplus -H [ip] -U [user] -P [password] raw 0x30 0x30 0x01 0x01
-
-    15%
-    ipmitool -I lanplus -H [ip] -U [user] -P [password] raw 0x30 0x30 0x02 0xff 0x0f
-
-    Fan 5 0% 
-    ipmitool -I lanplus -H [ip] -U [user] -P [password] raw  0x30 0x30 0x02 0x04 0x00
- * 
- */
 })();
