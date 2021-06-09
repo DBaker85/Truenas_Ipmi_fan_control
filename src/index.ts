@@ -1,6 +1,8 @@
-import { exec } from "child_process";
+import { spawnSync } from "child_process";
 import { readJSON } from "fs-extra";
 import { resolve } from "path";
+
+import { manualMode, fanSpeed15, fan5Off } from "./ipmiCommands";
 
 type SecretsType = {
   IpmiIp: String;
@@ -16,19 +18,16 @@ type SecretsType = {
       resolve("secrets.json")
     )) as SecretsType;
 
-    exec(
-      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} sensor list`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.log(`error: ${error.message}`);
-          return;
-        }
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          return;
-        }
-        console.log(`stdout with no cinfig: ${stdout}`);
-      }
+    spawnSync(
+      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
+    );
+
+    spawnSync(
+      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
+    );
+
+    spawnSync(
+      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
     );
   } catch (err) {
     console.error(
