@@ -79,7 +79,7 @@ let automode = "on";
           );
           automode = "on";
         }
-        if (automode === "off" && temp < tempThreshold) {
+        if (automode === "on" && temp < tempThreshold) {
           spawnSync(
             `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
           );
