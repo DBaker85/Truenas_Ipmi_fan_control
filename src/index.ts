@@ -8,7 +8,7 @@ import { map, filter, concatMap } from "rxjs/operators";
 
 import { getUnixTime, subSeconds } from "date-fns";
 
-import { manualMode, fanSpeed15, fan5Off } from "./ipmiCommands";
+import { manualMode, fanSpeed15, fan5Off, autoMode } from "./ipmiCommands";
 
 import { getHighestTemp } from "./utils";
 
@@ -19,6 +19,10 @@ type SecretsType = {
   nasIp: String;
   nasApiKey: String;
 };
+
+const tempThreshold = 60;
+
+let automode = "on";
 
 (async () => {
   try {
@@ -36,6 +40,8 @@ type SecretsType = {
     spawnSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
     );
+
+    automode = "off";
 
     timer(1, 1000)
       .pipe(
@@ -62,11 +68,33 @@ type SecretsType = {
             }
           );
           const json = await res.json();
-          // do stuff
+
           return getHighestTemp(json);
         })
       )
-      .subscribe((resp: number) => console.log(resp));
+      .subscribe((temp: number) => {
+        if (automode === "off" && temp > tempThreshold) {
+          spawnSync(
+            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${autoMode}`
+          );
+          automode = "on";
+        }
+        if (automode === "off" && temp < tempThreshold) {
+          spawnSync(
+            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
+          );
+
+          spawnSync(
+            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
+          );
+
+          spawnSync(
+            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
+          );
+
+          automode = "off";
+        }
+      });
   } catch (err) {
     console.error(err);
   }
