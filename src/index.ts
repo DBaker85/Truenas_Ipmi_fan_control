@@ -1,7 +1,7 @@
 import { spawnSync } from "child_process";
 import { readJSON } from "fs-extra";
 import { resolve } from "path";
-import fetch, { Response } from "node-fetch";
+import fetch from "node-fetch";
 
 import { timer, from, of } from "rxjs";
 import { map, filter, concatMap } from "rxjs/operators";
@@ -9,26 +9,18 @@ import { map, filter, concatMap } from "rxjs/operators";
 import { getUnixTime, subSeconds } from "date-fns";
 
 import { manualMode, fanSpeed15, fan5Off, autoMode } from "./ipmiCommands";
-
 import { getHighestTemp } from "./utils";
-
-type SecretsType = {
-  IpmiIp: String;
-  IpmiUser: String;
-  IpmiPassword: String;
-  nasIp: String;
-  nasApiKey: String;
-};
+import { SecretsType } from "./types";
 
 const tempThreshold = 60;
-
 let automode = "on";
+let sendingCommands = false;
 
 (async () => {
   try {
     const { IpmiIp, IpmiUser, IpmiPassword, nasIp, nasApiKey } =
       (await readJSON(resolve("secrets.json"))) as SecretsType;
-
+    sendingCommands = true;
     spawnSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
     );
@@ -42,7 +34,7 @@ let automode = "on";
     );
 
     automode = "off";
-
+    sendingCommands = false;
     timer(1, 1000)
       .pipe(
         concatMap(async (id) => {
@@ -73,26 +65,32 @@ let automode = "on";
         })
       )
       .subscribe((temp: number) => {
-        if (automode === "off" && temp > tempThreshold) {
-          spawnSync(
-            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${autoMode}`
-          );
-          automode = "on";
-        }
-        if (automode === "on" && temp < tempThreshold) {
-          spawnSync(
-            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
-          );
+        if ((sendingCommands = false)) {
+          if (automode === "off" && temp > tempThreshold) {
+            sendingCommands = true;
+            spawnSync(
+              `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${autoMode}`
+            );
+            automode = "on";
+            sendingCommands = false;
+          }
+          if (automode === "on" && temp < tempThreshold) {
+            sendingCommands = true;
+            spawnSync(
+              `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
+            );
 
-          spawnSync(
-            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
-          );
+            spawnSync(
+              `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
+            );
 
-          spawnSync(
-            `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
-          );
+            spawnSync(
+              `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
+            );
 
-          automode = "off";
+            automode = "off";
+            sendingCommands = false;
+          }
         }
       });
   } catch (err) {
