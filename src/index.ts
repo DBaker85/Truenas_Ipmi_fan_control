@@ -5,9 +5,9 @@ import fetch from "node-fetch";
 
 import { timer } from "rxjs";
 import { concatMap } from "rxjs/operators";
-
 import { getUnixTime, subSeconds } from "date-fns";
 import ora from "ora";
+import { cyan, green, red, yellowBright } from "chalk";
 
 import { manualMode, fanSpeed15, fan5Off, autoMode } from "./ipmiCommands";
 import { getHighestTemp } from "./utils";
@@ -24,15 +24,15 @@ const spinner = ora("Begin monitoring");
       (await readJSON(resolve("secrets.json"))) as SecretsType;
     console.log(`Config found, Initializing control`);
     sendingCommands = true;
-    console.log(`Setting manual mode`);
+    console.log(`Setting ${cyan("Manual")} mode`);
     execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
     );
-    console.log(`Setting fans to 15%`);
+    console.log(`Setting ${cyan("Fans")} to ${green("15%")}`);
     execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
     );
-    console.log(`Turning off fan 5`);
+    console.log(`Setting ${cyan("Fan 5")} to ${green("0%")}`);
     execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
     );
@@ -46,7 +46,7 @@ const spinner = ora("Begin monitoring");
           const res = await fetch(
             `http://${nasIp}/api/v2.0/reporting/get_data`,
             {
-              method: "POST", // *GET, POST, PUT, DELETE, etc.
+              method: "POST",
               headers: {
                 Authorization: `Bearer ${nasApiKey}`,
               },
@@ -72,7 +72,11 @@ const spinner = ora("Begin monitoring");
       .subscribe((temp: number) => {
         if ((sendingCommands = false)) {
           if (automode === "off" && temp > tempThreshold) {
-            console.log(`Threshold exceeded, setting Auto mode`);
+            console.log(
+              `Threshold ${red("Exceeded")}, setting ${yellowBright(
+                "Auto"
+              )} mode`
+            );
             sendingCommands = true;
             execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${autoMode}`
@@ -81,16 +85,18 @@ const spinner = ora("Begin monitoring");
             sendingCommands = false;
           }
           if (automode === "on" && temp < tempThreshold) {
-            console.log(`Temperatures within safe limits, setting Manual mode`);
+            console.log(
+              `Temperatures within safe limits, setting ${cyan("Manual")} mode`
+            );
             sendingCommands = true;
             execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
             );
-
+            console.log(`Setting ${cyan("fans")} to ${green("15%")}`);
             execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
             );
-
+            console.log(`Setting ${cyan("fan 5")} to ${green("0%")}`);
             execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
             );
