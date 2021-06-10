@@ -1,12 +1,13 @@
-import { spawnSync } from "child_process";
+import { execSync } from "child_process";
 import { readJSON } from "fs-extra";
 import { resolve } from "path";
 import fetch from "node-fetch";
 
-import { timer, from, of } from "rxjs";
-import { map, filter, concatMap } from "rxjs/operators";
+import { timer } from "rxjs";
+import { concatMap } from "rxjs/operators";
 
 import { getUnixTime, subSeconds } from "date-fns";
+import ora from "ora";
 
 import { manualMode, fanSpeed15, fan5Off, autoMode } from "./ipmiCommands";
 import { getHighestTemp } from "./utils";
@@ -15,26 +16,30 @@ import { SecretsType } from "./types";
 const tempThreshold = 60;
 let automode = "on";
 let sendingCommands = false;
+const spinner = ora("Begin monitoring");
 
 (async () => {
   try {
     const { IpmiIp, IpmiUser, IpmiPassword, nasIp, nasApiKey } =
       (await readJSON(resolve("secrets.json"))) as SecretsType;
+    console.log(`Config found, Initializing control`);
     sendingCommands = true;
-    spawnSync(
+    console.log(`Setting manual mode`);
+    execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
     );
-
-    spawnSync(
+    console.log(`Setting fans to 15%`);
+    execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
     );
-
-    spawnSync(
+    console.log(`Turning off fan 5`);
+    execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
     );
 
     automode = "off";
     sendingCommands = false;
+    spinner.start();
     timer(1, 1000)
       .pipe(
         concatMap(async (id) => {
@@ -67,24 +72,26 @@ let sendingCommands = false;
       .subscribe((temp: number) => {
         if ((sendingCommands = false)) {
           if (automode === "off" && temp > tempThreshold) {
+            console.log(`Threshold exceeded, setting Auto mode`);
             sendingCommands = true;
-            spawnSync(
+            execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${autoMode}`
             );
             automode = "on";
             sendingCommands = false;
           }
           if (automode === "on" && temp < tempThreshold) {
+            console.log(`Temperatures within safe limits, setting Manual mode`);
             sendingCommands = true;
-            spawnSync(
+            execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${manualMode}`
             );
 
-            spawnSync(
+            execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
             );
 
-            spawnSync(
+            execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
             );
 

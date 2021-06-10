@@ -7,28 +7,38 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky install",
     "setup": "ts-node scripts/create-config.ts",
-    "start": "ts-node src/index.ts"
+    "dev": "DEV_ENV=true nodemon index.js",
+    "build": "babel src --out-dir dist --copy-files --extensions '.ts,.js'"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@babel/cli": "^7.14.5",
+    "@babel/core": "^7.14.5",
+    "chalk": "^4.1.1",
     "date-fns": "^2.22.1",
     "fs-extra": "^10.0.0",
     "node-fetch": "^2.6.1",
+    "ora": "^5.4.1",
     "prompts": "^2.4.1",
-    "rxjs": "^7.1.0",
-    "websocket": "^1.0.34"
+    "rxjs": "^7.1.0"
   },
   "devDependencies": {
+    "@babel/node": "^7.14.5",
+    "@babel/plugin-transform-runtime": "^7.14.5",
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.14.5",
+    "@babel/preset-typescript": "^7.14.5",
+    "@babel/runtime": "^7.14.5",
     "@types/date-fns": "^2.6.0",
     "@types/fs-extra": "^9.0.11",
     "@types/node": "^15.12.2",
     "@types/node-fetch": "^2.5.10",
     "@types/prompts": "^2.0.12",
     "husky": "^6.0.0",
+    "nodemon": "^2.0.7",
     "prettier": "2.3.1",
     "pretty-quick": "^3.1.0",
-    "ts-node": "^10.0.0",
     "typescript": "^4.3.2"
   }
 }
