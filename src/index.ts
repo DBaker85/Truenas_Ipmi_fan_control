@@ -70,7 +70,7 @@ const spinner = ora("Begin monitoring");
         })
       )
       .subscribe((temp: number) => {
-        if ((sendingCommands = false)) {
+        if (sendingCommands === false) {
           if (automode === "off" && temp > tempThreshold) {
             console.log(
               `Threshold ${red("Exceeded")}, setting ${yellowBright(
