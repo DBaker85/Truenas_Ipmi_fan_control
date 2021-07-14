@@ -5,7 +5,6 @@ import fetch from "node-fetch";
 
 import { timer } from "rxjs";
 import { concatMap } from "rxjs/operators";
-import { getUnixTime, subSeconds } from "date-fns";
 import ora from "ora";
 import { cyan, green, red, yellowBright } from "chalk";
 
@@ -20,8 +19,9 @@ const spinner = ora("Begin monitoring");
 
 (async () => {
   try {
-    const { IpmiIp, IpmiUser, IpmiPassword, nasIp, nasApiKey } =
-      (await readJSON(resolve("secrets.json"))) as SecretsType;
+    const { IpmiIp, IpmiUser, IpmiPassword, glancesIp } = (await readJSON(
+      resolve("secrets.json")
+    )) as SecretsType;
     console.log(`Config found, Initializing control`);
     sendingCommands = true;
     console.log(`Setting ${cyan("Manual")} mode`);
@@ -42,28 +42,10 @@ const spinner = ora("Begin monitoring");
     spinner.start();
     timer(1, 1000)
       .pipe(
-        concatMap(async (id) => {
-          const res = await fetch(
-            `http://${nasIp}/api/v2.0/reporting/get_data`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${nasApiKey}`,
-              },
-              body: JSON.stringify({
-                graphs: [
-                  {
-                    name: "cputemp",
-                  },
-                ],
-                reporting_query: {
-                  start: `${getUnixTime(subSeconds(new Date(), 10))}`,
-                  end: `${getUnixTime(subSeconds(new Date(), 10))}`,
-                  aggregate: true,
-                },
-              }),
-            }
-          );
+        concatMap(async () => {
+          const res = await fetch(`http://${glancesIp}/api/3/all`, {
+            method: "GET",
+          });
           const json = await res.json();
 
           return getHighestTemp(json);

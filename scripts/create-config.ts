@@ -20,13 +20,8 @@ import { writeJSON } from "fs-extra";
     },
     {
       type: "text",
-      name: "nasIp",
-      message: `Enter the ip adress of your truenas instance`,
-    },
-    {
-      type: "text",
-      name: "nasApiKey",
-      message: `Enter your truenas apikey`,
+      name: "glancesIp",
+      message: `Enter the ip adress of your glances web instance`,
     },
   ];
   const response = await prompts(questions);
