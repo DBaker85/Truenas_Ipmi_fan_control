@@ -40,7 +40,7 @@ const spinner = ora("Begin monitoring");
     automode = "off";
     sendingCommands = false;
     spinner.start();
-    timer(1, 1000)
+    timer(1, 5000)
       .pipe(
         concatMap(async () => {
           const res = await fetch(`http://${glancesIp}/api/3/all`, {
