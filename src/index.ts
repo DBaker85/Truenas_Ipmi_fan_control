@@ -90,6 +90,7 @@ const spinner = ora("Begin monitoring");
       });
   } catch (err) {
     console.error(err);
+    spinner.fail(err);
     process.exit(1);
   }
 })();
