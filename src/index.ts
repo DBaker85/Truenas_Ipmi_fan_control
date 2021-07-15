@@ -11,6 +11,7 @@ import { cyan, green, red, yellowBright } from "chalk";
 import { manualMode, fanSpeed15, fan5Off, autoMode } from "./ipmiCommands";
 import { getHighestTemp } from "./utils";
 import { SecretsType } from "./types";
+import { IpmiIp, IpmiUser, IpmiPassword, glancesIp } from "../secrets.json";
 
 const tempThreshold = 60;
 let automode = "on";
@@ -19,9 +20,6 @@ const spinner = ora("Begin monitoring");
 
 (async () => {
   try {
-    const { IpmiIp, IpmiUser, IpmiPassword, glancesIp } = (await readJSON(
-      resolve("secrets.json")
-    )) as SecretsType;
     console.log(`Config found, Initializing control`);
     sendingCommands = true;
     console.log(`Setting ${cyan("Manual")} mode`);
