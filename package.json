@@ -30,16 +30,16 @@
     "@babel/preset-env": "7.14.5",
     "@babel/preset-typescript": "7.14.5",
     "@babel/runtime": "7.14.5",
-    "@types/date-fns": "^2.6.0",
-    "@types/fs-extra": "^9.0.11",
-    "@types/node": "^15.12.2",
-    "@types/node-fetch": "^2.5.10",
-    "@types/prompts": "^2.0.12",
-    "husky": "^6.0.0",
-    "nodemon": "^2.0.7",
+    "@types/date-fns": "2.6.0",
+    "@types/fs-extra": "9.0.11",
+    "@types/node": "15.12.2",
+    "@types/node-fetch": "2.5.10",
+    "@types/prompts": "2.0.12",
+    "husky": "6.0.0",
+    "nodemon": "2.0.7",
     "prettier": "2.3.1",
-    "pretty-quick": "^3.1.0",
-    "ts-node": "^10.0.0",
-    "typescript": "^4.3.5"
+    "pretty-quick": "3.1.0",
+    "ts-node": "10.0.0",
+    "typescript": "4.3.5"
   }
 }
