@@ -8,7 +8,7 @@ import { concatMap } from "rxjs/operators";
 import ora from "ora";
 import { cyan, green, red, yellowBright } from "chalk";
 
-import { manualMode, fanSpeed15, fan5Off, autoMode } from "./ipmiCommands";
+import { manualMode, fanSpeed8, fan5Off, autoMode } from "./ipmiCommands";
 import { getHighestTemp } from "./utils";
 import { SecretsType } from "./types";
 import { IpmiIp, IpmiUser, IpmiPassword, glancesIp } from "../secrets.json";
@@ -28,9 +28,9 @@ const spinner = ora("Begin monitoring");
     );
     console.log(`Setting ${cyan("Fans")} to ${green("15%")}`);
     execSync(
-      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
+      `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed8}`
     );
-    console.log(`Setting ${cyan("Fan 5")} to ${green("0%")}`);
+    console.log(`Setting ${cyan("Fan 5")} to ${green("1%")}`);
     execSync(
       `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
     );
@@ -74,9 +74,9 @@ const spinner = ora("Begin monitoring");
             );
             console.log(`Setting ${cyan("fans")} to ${green("15%")}`);
             execSync(
-              `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed15}`
+              `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fanSpeed8}`
             );
-            console.log(`Setting ${cyan("fan 5")} to ${green("0%")}`);
+            console.log(`Setting ${cyan("fan 5")} to ${green("1%")}`);
             execSync(
               `ipmitool -I lanplus -H ${IpmiIp} -U ${IpmiUser} -P ${IpmiPassword} ${fan5Off}`
             );
